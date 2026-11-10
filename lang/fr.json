@@ -1,0 +1,23 @@
+{
+  "RESUME_EPOQUES": {
+    "Titre": "Résumé de la dernière séance",
+    "Bouton": "Résumés des séances",
+    "Partager": "Montrer à tous",
+    "PartageOk": "Résumé envoyé aux joueurs connectés.",
+    "PartageErreur": "Impossible d'envoyer le résumé aux joueurs (voir la console F12).",
+    "AucunResume": "Aucun résumé n'est disponible pour le moment.",
+    "OuvertureErreur": "Impossible d'ouvrir le résumé (voir la console F12).",
+    "Reglage": {
+      "Auto": {
+        "Nom": "Ouvrir le résumé à la connexion",
+        "Aide": "Affiche automatiquement le résumé d'une époque quand il n'a pas encore été vu. Réglage propre à chaque utilisateur."
+      }
+    },
+    "ZoomPlus": "Zoom avant",
+    "ZoomMoins": "Zoom arrière",
+    "Ajuster": "Ajuster à la fenêtre",
+    "Aide": "Molette : zoom · Glisser : déplacer · Double-clic : ajuster",
+    "Nouveau": "Nouveau",
+    "EpoqueEnCours": "Époque en cours"
+  }
+}

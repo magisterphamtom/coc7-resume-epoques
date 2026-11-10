@@ -1,0 +1,42 @@
+<div class="rhe-root rhe-{{era}}">
+  <div class="rhe-toolbar">
+    <button type="button" data-action="zoomOut" data-tooltip="{{labels.zoomOut}}" aria-label="{{labels.zoomOut}}"><i class="fa-solid fa-magnifying-glass-minus"></i></button>
+    <button type="button" data-action="zoomIn" data-tooltip="{{labels.zoomIn}}" aria-label="{{labels.zoomIn}}"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
+    <button type="button" data-action="fit" data-tooltip="{{labels.fit}}" aria-label="{{labels.fit}}"><i class="fa-solid fa-expand"></i></button>
+    <span class="rhe-hint">{{labels.hint}}</span>
+    {{#if isGM}}
+    <button type="button" class="rhe-share" data-action="share"><i class="fa-solid fa-paper-plane"></i> {{labels.share}}</button>
+    {{/if}}
+  </div>
+  {{#if showEras}}
+  <nav class="rhe-eras">
+    {{#each eras}}
+    <button type="button" class="rhe-era rhe-era-{{key}} {{#if active}}active{{/if}}" data-action="selectEra" data-era="{{key}}">
+      <span class="rhe-era-label">{{label}}</span>
+      {{#if current}}<span class="rhe-current" data-tooltip="{{../labels.current}}"><i class="fa-solid fa-location-dot"></i></span>{{/if}}
+      {{#if isNew}}<span class="rhe-new">{{../labels.new}}</span>{{/if}}
+    </button>
+    {{/each}}
+  </nav>
+  {{/if}}
+  <div class="rhe-body">
+    {{#if showTabs}}
+    <nav class="rhe-tabs">
+      {{#each entries}}
+      <button type="button" class="rhe-tab {{#if active}}active{{/if}}" data-action="selectTab" data-index="{{index}}" data-tooltip="{{titre}}">
+        <span class="rhe-tab-num">{{label}}</span>
+        {{#if titre}}<span class="rhe-tab-title">{{titre}}</span>{{/if}}
+        {{#if isNew}}<span class="rhe-new">{{../labels.new}}</span>{{/if}}
+      </button>
+      {{/each}}
+    </nav>
+    {{/if}}
+    <div class="rhe-scroll">
+      {{#if src}}
+      <img class="rhe-img" src="{{src}}" alt="Résumé de séance" draggable="false">
+      {{else}}
+      <p class="rhe-none">{{labels.none}}</p>
+      {{/if}}
+    </div>
+  </div>
+</div>
