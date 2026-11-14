@@ -50,7 +50,8 @@ async function fetchStamp(path) {
 
 /**
  * Lit resume/index.json :
- * { "resumes": [ { "epoque": "1933", "session": 3, "titre": "…", "fichier": "1933-session-03.webp", "date": "2026-11-10" } ] }
+ * { "resumes": [ { "epoque": "1933", "session": 3, "titre": "…", "fichier": "1933-session-03.webp", "verso": "1933-session-03-verso.webp", "date": "2026-11-10" } ] }
+ * « verso » est facultatif : une deuxième image, que le bouton « Retourner » affiche comme le verso d'une feuille.
  * « epoque » vaut 1933 ou 2026 ; « date » (AAAA-MM-JJ) sert à savoir quel résumé est le plus récent toutes époques confondues.
  * @returns {Promise<{byEra: object, stamps: object}|null>}
  */
@@ -71,6 +72,7 @@ async function resolveAll() {
         titre: String(entry.titre ?? ""),
         date: String(entry.date ?? ""),
         path: `${baseDir()}/${entry.fichier}`,
+        versoPath: entry.verso ? `${baseDir()}/${entry.verso}` : null,
         stamp: indexStamp
       });
     });
@@ -132,6 +134,7 @@ class ResumeViewer extends HandlebarsApplicationMixin(ApplicationV2) {
       fit: ResumeViewer.#onFit,
       selectTab: ResumeViewer.#onSelectTab,
       selectEra: ResumeViewer.#onSelectEra,
+      flip: ResumeViewer.#onFlip,
       share: ResumeViewer.#onShare
     }
   };
@@ -147,6 +150,11 @@ class ResumeViewer extends HandlebarsApplicationMixin(ApplicationV2) {
   zoomApi = null;
 
   #resizeObserver = null;
+
+  /** Résumé affiché (index dans entries) et face visible (0 = recto, 1 = verso). */
+  entryIndex = 0;
+  page = 0;
+  flipping = false;
 
   /** Résumés de l'époque affichée (un par onglet). */
   entries = [];
@@ -169,8 +177,11 @@ class ResumeViewer extends HandlebarsApplicationMixin(ApplicationV2) {
       active: i === 0,
       isNew: i === 0 && all.stamps[this.era] !== seen[this.era],
       label: entry.session ? `S${entry.session}` : game.i18n.localize("RESUME_EPOQUES.Titre"),
-      src: `${foundry.utils.getRoute(entry.path)}?v=${entry.stamp}`
+      src: `${foundry.utils.getRoute(entry.path)}?v=${entry.stamp}`,
+      verso: entry.versoPath ? `${foundry.utils.getRoute(entry.versoPath)}?v=${entry.stamp}` : null
     }));
+    this.entryIndex = 0;
+    this.page = 0;
     const eras = ERAS.filter((era) => all.byEra[era].length).map((era) => ({
       key: era,
       label: eraLabel(era),
@@ -185,6 +196,7 @@ class ResumeViewer extends HandlebarsApplicationMixin(ApplicationV2) {
       eras,
       showEras: eras.length > 1,
       showTabs: this.entries.length > 1,
+      hasVerso: !!this.entries[0]?.verso,
       isGM: game.user.isGM,
       labels: this.#labels()
     };
@@ -200,7 +212,10 @@ class ResumeViewer extends HandlebarsApplicationMixin(ApplicationV2) {
       share: t("Partager"),
       none: t("AucunResume"),
       new: t("Nouveau"),
-      current: t("EpoqueEnCours")
+      current: t("EpoqueEnCours"),
+      flip: t("Retourner"),
+      recto: t("Recto"),
+      verso: t("Verso")
     };
   }
 
@@ -336,8 +351,48 @@ class ResumeViewer extends HandlebarsApplicationMixin(ApplicationV2) {
       tab.classList.toggle("active", tab === target);
     });
     target.querySelector(".rhe-new")?.remove();
+    this.entryIndex = Number(target.dataset.index);
+    this.page = 0;
+    this.#syncFlipButton();
     img.addEventListener("load", () => this.zoomApi?.fit(), { once: true });
     img.src = entry.src;
+  }
+
+  /** Affiche ou cache le bouton « Retourner » selon que la séance a un verso. */
+  #syncFlipButton() {
+    const button = this.element.querySelector(".rhe-flip");
+    if (!button) return;
+    button.hidden = !this.entries[this.entryIndex]?.verso;
+    const label = button.querySelector(".rhe-flip-label");
+    if (label) label.textContent = game.i18n.localize(this.page ? "RESUME_EPOQUES.Verso" : "RESUME_EPOQUES.Recto");
+  }
+
+  /** Retourne la feuille : la page pivote, l'image change, puis la page revient. */
+  static async #onFlip() {
+    const entry = this.entries[this.entryIndex];
+    const viewport = this.element.querySelector(".rhe-scroll");
+    const img = viewport?.querySelector(".rhe-img");
+    if (this.flipping || !entry?.verso || !img) return;
+    this.flipping = true;
+    const turn = (deg) => `perspective(1400px) rotateY(${deg}deg)`;
+    try {
+      await viewport.animate([{ transform: turn(0) }, { transform: turn(90) }], { duration: 220, easing: "ease-in", fill: "forwards" }).finished;
+      this.page = this.page ? 0 : 1;
+      const src = this.page ? entry.verso : entry.src;
+      await new Promise((resolve) => {
+        img.addEventListener("load", resolve, { once: true });
+        img.addEventListener("error", resolve, { once: true });
+        img.src = src;
+      });
+      this.zoomApi?.fit();
+      viewport.getAnimations().forEach((animation) => animation.cancel());
+      await viewport.animate([{ transform: turn(-90) }, { transform: turn(0) }], { duration: 220, easing: "ease-out" }).finished;
+    } catch (err) {
+      console.warn(`${MODULE_ID} | Retournement interrompu`, err);
+    } finally {
+      this.flipping = false;
+      this.#syncFlipButton();
+    }
   }
 
   static #onSelectEra(event, target) {

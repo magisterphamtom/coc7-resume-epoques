@@ -18,6 +18,9 @@
     "Ajuster": "Ajuster à la fenêtre",
     "Aide": "Molette : zoom · Glisser : déplacer · Double-clic : ajuster",
     "Nouveau": "Nouveau",
-    "EpoqueEnCours": "Époque en cours"
+    "EpoqueEnCours": "Époque en cours",
+    "Retourner": "Retourner la feuille (recto / verso)",
+    "Recto": "Recto",
+    "Verso": "Verso"
   }
 }

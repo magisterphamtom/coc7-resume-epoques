@@ -193,3 +193,16 @@
   padding: 2rem;
   text-align: center;
 }
+
+.coc7-resume-epoques .rhe-toolbar .rhe-flip[hidden] {
+  display: none;
+}
+
+.coc7-resume-epoques .rhe-toolbar .rhe-flip {
+  color: var(--rhe-accent-2);
+  border-color: var(--rhe-accent);
+}
+
+.coc7-resume-epoques .rhe-scroll {
+  backface-visibility: hidden;
+}
