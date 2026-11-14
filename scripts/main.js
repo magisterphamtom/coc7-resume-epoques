@@ -294,16 +294,22 @@ class ResumeViewer extends HandlebarsApplicationMixin(ApplicationV2) {
     }, { passive: false });
 
     let drag = null;
+    let moved = false;
+    let clickTimer = null;
     viewport.addEventListener("pointerdown", (event) => {
       if (event.button !== 0) return;
       drag = { x: event.clientX, y: event.clientY, tx, ty };
+      moved = false;
       viewport.setPointerCapture(event.pointerId);
       viewport.classList.add("rhe-dragging");
     });
     viewport.addEventListener("pointermove", (event) => {
       if (!drag) return;
-      tx = drag.tx + (event.clientX - drag.x);
-      ty = drag.ty + (event.clientY - drag.y);
+      const dx = event.clientX - drag.x;
+      const dy = event.clientY - drag.y;
+      if (Math.abs(dx) + Math.abs(dy) > 5) moved = true;
+      tx = drag.tx + dx;
+      ty = drag.ty + dy;
       clamp();
       apply();
     });
@@ -313,7 +319,21 @@ class ResumeViewer extends HandlebarsApplicationMixin(ApplicationV2) {
     };
     viewport.addEventListener("pointerup", endDrag);
     viewport.addEventListener("pointercancel", endDrag);
-    viewport.addEventListener("dblclick", fitView);
+
+    // Un clic (sans glisser) retourne la feuille s'il y a un verso ; deux clics rapprochés ajustent à la fenêtre.
+    viewport.addEventListener("click", (event) => {
+      if (moved || event.button !== 0) return;
+      if (clickTimer) {
+        clearTimeout(clickTimer);
+        clickTimer = null;
+        fitView();
+        return;
+      }
+      clickTimer = setTimeout(() => {
+        clickTimer = null;
+        if (this.entries[this.entryIndex]?.verso) ResumeViewer.#onFlip.call(this);
+      }, 250);
+    });
 
     // Si la fenêtre est redimensionnée : on réajuste, ou on garde le zoom courant.
     this.#resizeObserver = new ResizeObserver(() => {

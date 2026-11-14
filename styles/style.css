@@ -99,9 +99,10 @@
   color: var(--e);
 }
 
-/* Corps : onglets de séances à gauche, image à droite. */
+/* Corps : image à gauche, onglets de séances à droite. */
 .coc7-resume-epoques .rhe-body {
   display: flex;
+  flex-direction: row-reverse;
   flex: 1 1 auto;
   min-height: 0;
 }
@@ -114,7 +115,7 @@
   padding: 0.3rem;
   overflow-y: auto;
   background: var(--rhe-panel);
-  border-right: 1px solid var(--rhe-accent);
+  border-left: 1px solid var(--rhe-accent);
 }
 
 .coc7-resume-epoques .rhe-tab {
