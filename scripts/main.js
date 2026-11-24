@@ -135,6 +135,7 @@ class ResumeViewer extends HandlebarsApplicationMixin(ApplicationV2) {
       selectTab: ResumeViewer.#onSelectTab,
       selectEra: ResumeViewer.#onSelectEra,
       flip: ResumeViewer.#onFlip,
+      fullscreen: ResumeViewer.#onFullscreen,
       share: ResumeViewer.#onShare
     }
   };
@@ -208,6 +209,7 @@ class ResumeViewer extends HandlebarsApplicationMixin(ApplicationV2) {
       zoomIn: t("ZoomPlus"),
       zoomOut: t("ZoomMoins"),
       fit: t("Ajuster"),
+      big: t("Grand"),
       hint: t("Aide"),
       share: t("Partager"),
       none: t("AucunResume"),
@@ -320,7 +322,7 @@ class ResumeViewer extends HandlebarsApplicationMixin(ApplicationV2) {
     viewport.addEventListener("pointerup", endDrag);
     viewport.addEventListener("pointercancel", endDrag);
 
-    // Un clic (sans glisser) retourne la feuille s'il y a un verso ; deux clics rapprochés ajustent à la fenêtre.
+    // Un clic (sans glisser) ouvre le résumé en grand ; deux clics rapprochés ajustent à la fenêtre.
     viewport.addEventListener("click", (event) => {
       if (moved || event.button !== 0) return;
       if (clickTimer) {
@@ -331,7 +333,7 @@ class ResumeViewer extends HandlebarsApplicationMixin(ApplicationV2) {
       }
       clickTimer = setTimeout(() => {
         clickTimer = null;
-        if (this.entries[this.entryIndex]?.verso) ResumeViewer.#onFlip.call(this);
+        ResumeViewer.#onFullscreen.call(this);
       }, 250);
     });
 
@@ -415,6 +417,21 @@ class ResumeViewer extends HandlebarsApplicationMixin(ApplicationV2) {
     }
   }
 
+  /** Ouvre le résumé affiché en grand, par-dessus tout l'écran. */
+  static #onFullscreen() {
+    const entry = this.entries[this.entryIndex];
+    if (!entry) return;
+    openLightbox(entry, this.page, this.era, (page) => {
+      if (page === this.page || this.flipping) return;
+      const img = this.element?.querySelector(".rhe-img");
+      if (!img) return;
+      this.page = page;
+      img.addEventListener("load", () => this.zoomApi?.fit(), { once: true });
+      img.src = page ? entry.verso : entry.src;
+      this.#syncFlipButton();
+    });
+  }
+
   static #onSelectEra(event, target) {
     const era = target.dataset.era;
     if (!ERAS.includes(era) || era === this.era) return;
@@ -431,6 +448,72 @@ class ResumeViewer extends HandlebarsApplicationMixin(ApplicationV2) {
       ui.notifications.error(game.i18n.localize("RESUME_EPOQUES.PartageErreur"));
     }
   }
+}
+
+/**
+ * Résumé en grand, hors de la fenêtre : zoom à la molette (×4), glisser pour déplacer,
+ * double-clic pour revenir, « Retourner » s'il y a un verso ; Échap, la croix ou le fond pour fermer.
+ * @param {object} entry Résumé affiché (src, verso).
+ * @param {number} page Face visible (0 recto, 1 verso).
+ * @param {string} era Époque, pour l'habillage.
+ * @param {Function} onPage Appelée à la fermeture avec la face visible.
+ */
+function openLightbox(entry, page, era, onPage) {
+  document.querySelector(".rhe-lightbox")?.remove();
+  const t = (k) => game.i18n.localize(`RESUME_EPOQUES.${k}`);
+  const box = document.createElement("div");
+  box.className = `rhe-lightbox rhe-lb-${era === "1933" ? "1933" : "modern"}`;
+  box.innerHTML = `<div class="rhe-lb-scene"><img class="rhe-lb-img" alt="" draggable="false"></div>
+    <div class="rhe-lb-bar">
+      ${entry.verso ? `<button type="button" class="rhe-lb-flip"><i class="fa-solid fa-rotate"></i> ${t("Retourner")}</button><span class="rhe-lb-page"></span>` : ""}
+      <span class="rhe-lb-hint">${t("AideGrand")}</span>
+      <button type="button" class="rhe-lb-close" aria-label="${t("Fermer")}"><i class="fa-solid fa-xmark"></i></button>
+    </div>`;
+  document.body.append(box);
+  const scene = box.querySelector(".rhe-lb-scene");
+  const img = box.querySelector(".rhe-lb-img");
+  const label = box.querySelector(".rhe-lb-page");
+  let scale = 1, tx = 0, ty = 0, drag = null, busy = false;
+  const apply = () => { img.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`; };
+  const reset = () => { scale = 1; tx = 0; ty = 0; apply(); };
+  const show = () => {
+    img.src = page ? entry.verso : entry.src;
+    if (label) label.textContent = t(page ? "Verso" : "Recto");
+    reset();
+  };
+  const close = () => { document.removeEventListener("keydown", onKey, true); box.remove(); onPage?.(page); };
+  const onKey = (event) => { if (event.key === "Escape") { event.stopPropagation(); event.preventDefault(); close(); } };
+  const flip = async () => {
+    if (busy || !entry.verso) return;
+    busy = true;
+    const turn = (deg) => `perspective(1800px) rotateY(${deg}deg)`;
+    try {
+      await scene.animate([{ transform: turn(0) }, { transform: turn(90) }], { duration: 240, easing: "ease-in", fill: "forwards" }).finished;
+      page = page ? 0 : 1;
+      await new Promise((resolve) => { img.addEventListener("load", resolve, { once: true }); img.addEventListener("error", resolve, { once: true }); show(); });
+      scene.getAnimations().forEach((a) => a.cancel());
+      await scene.animate([{ transform: turn(-90) }, { transform: turn(0) }], { duration: 240, easing: "ease-out" }).finished;
+    } catch (err) { /* retournement interrompu */ } finally { busy = false; }
+  };
+  box.querySelector(".rhe-lb-close").addEventListener("click", close);
+  box.querySelector(".rhe-lb-flip")?.addEventListener("click", flip);
+  box.addEventListener("click", (event) => { if (event.target === box || event.target === scene) close(); });
+  scene.addEventListener("wheel", (event) => {
+    event.preventDefault();
+    const r = img.getBoundingClientRect();
+    const next = Math.min(4, Math.max(1, scale * (event.deltaY < 0 ? 1.2 : 1 / 1.2)));
+    const cx = event.clientX - (r.left + r.width / 2);
+    const cy = event.clientY - (r.top + r.height / 2);
+    tx -= cx * (next / scale - 1); ty -= cy * (next / scale - 1); scale = next;
+    if (scale === 1) { tx = 0; ty = 0; }
+    apply();
+  }, { passive: false });
+  img.addEventListener("pointerdown", (event) => { if (event.button !== 0) return; drag = { x: event.clientX, y: event.clientY, tx, ty }; img.setPointerCapture(event.pointerId); });
+  img.addEventListener("pointermove", (event) => { if (!drag || scale <= 1) return; tx = drag.tx + event.clientX - drag.x; ty = drag.ty + event.clientY - drag.y; apply(); });
+  img.addEventListener("pointerup", () => { drag = null; });
+  img.addEventListener("dblclick", reset);
+  document.addEventListener("keydown", onKey, true);
+  show();
 }
 
 /**

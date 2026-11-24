@@ -207,3 +207,79 @@
 .coc7-resume-epoques .rhe-scroll {
   backface-visibility: hidden;
 }
+
+/* ===================================================================
+   Résumé en grand, par-dessus tout l'écran
+   =================================================================== */
+.rhe-lightbox {
+  --lb-accent: #c9a24a;
+  --lb-ink: #ecd08a;
+  --lb-btn: #1e170e;
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  background: radial-gradient(ellipse at 50% 40%, rgba(40, 28, 12, .9), rgba(8, 6, 3, .96));
+  font-family: Georgia, "Times New Roman", serif;
+  animation: rhe-lb-in .18s ease-out;
+}
+.rhe-lightbox.rhe-lb-modern {
+  --lb-accent: #4aa8e0;
+  --lb-ink: #d9eefb;
+  --lb-btn: #0f2236;
+  background: radial-gradient(ellipse at 50% 40%, rgba(10, 34, 56, .9), rgba(3, 8, 14, .96));
+  font-family: "Arial Narrow", "Segoe UI", sans-serif;
+}
+@keyframes rhe-lb-in { from { opacity: 0; } to { opacity: 1; } }
+.rhe-lightbox .rhe-lb-scene {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 16px 2vw 0;
+  backface-visibility: hidden;
+}
+.rhe-lightbox .rhe-lb-img {
+  max-width: 96vw;
+  max-height: calc(100vh - 100px);
+  border: 0;
+  box-shadow: 0 0 0 2px var(--lb-accent), 0 20px 60px rgba(0, 0, 0, .8);
+  cursor: grab;
+  user-select: none;
+  transform-origin: center;
+  touch-action: none;
+}
+.rhe-lightbox.rhe-lb-1933 .rhe-lb-img { filter: sepia(.08); }
+.rhe-lightbox .rhe-lb-bar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 10px 16px 14px;
+  color: var(--lb-ink);
+}
+.rhe-lightbox .rhe-lb-hint { font-size: .85rem; opacity: .75; }
+.rhe-lightbox .rhe-lb-page { font-size: .9rem; letter-spacing: .05em; }
+.rhe-lightbox button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: auto;
+  height: 34px;
+  padding: 0 14px;
+  border: 1px solid var(--lb-accent);
+  border-radius: 4px;
+  background: var(--lb-btn);
+  color: var(--lb-ink);
+  font-family: inherit;
+  cursor: pointer;
+}
+.rhe-lightbox button:hover { box-shadow: 0 0 8px var(--lb-accent); }
+.rhe-lightbox .rhe-lb-close { position: absolute; top: 14px; right: 16px; width: 40px; height: 40px; padding: 0; justify-content: center; font-size: 1.2rem; border-radius: 50%; }
+.coc7-resume-epoques .rhe-scroll { cursor: zoom-in; }
+.coc7-resume-epoques .rhe-scroll.rhe-dragging { cursor: grabbing; }
+@media (prefers-reduced-motion: reduce) { .rhe-lightbox { animation: none; } }

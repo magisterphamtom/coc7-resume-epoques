@@ -12,9 +12,10 @@ Inspiré de [Résumé hebdomadaire](https://github.com/magisterphamtom/resume-he
 - **Deux fils séparés** : boutons d'époque en haut de la fenêtre, avec un repère « Nouveau » sur chaque époque qui a un résumé non vu.
 - **Habillage selon l'époque** : papier et or pour 1933, bleu glacier pour 2025-2026.
 - **Suit la Bascule d'époque** : avec [CoC7 – Bascule d'époque](https://github.com/magisterphamtom/coc7-bascule-epoque), la fenêtre s'ouvre sur l'époque en cours de la table (repère 📍).
-- **Recto / verso** : une séance peut avoir deux images (par exemple un dossier sur deux pages) ; un clic sur l'image (ou le bouton « Retourner ») fait pivoter la feuille d'une face à l'autre.
+- **Recto / verso** : une séance peut avoir deux images (par exemple un dossier sur deux pages) ; le bouton « Retourner » fait pivoter la feuille d'une face à l'autre.
 - **Onglets par séance sur le côté droit** de chaque époque, pour relire tous les résumés précédents.
 - **Zoom à la molette**, déplacement en glissant, double-clic pour ajuster ; l'image tient toujours dans la fenêtre.
+- **Voir en grand** : un clic sur l'image (ou le bouton « Voir en grand ») ouvre le résumé sur tout l'écran, hors de la fenêtre, aux couleurs de l'époque : zoom jusqu'à ×4, « Retourner » s'il y a un verso ; Échap, la croix ou un clic sur le fond pour fermer.
 - **Bouton 📜** dans la barre de gauche pour rouvrir la fenêtre, et bouton MJ **Montrer à tous**.
 
 ## Installation
