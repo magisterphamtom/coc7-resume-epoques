@@ -280,6 +280,5 @@
 }
 .rhe-lightbox button:hover { box-shadow: 0 0 8px var(--lb-accent); }
 .rhe-lightbox .rhe-lb-close { position: absolute; top: 14px; right: 16px; width: 40px; height: 40px; padding: 0; justify-content: center; font-size: 1.2rem; border-radius: 50%; }
-.coc7-resume-epoques .rhe-scroll { cursor: zoom-in; }
 .coc7-resume-epoques .rhe-scroll.rhe-dragging { cursor: grabbing; }
 @media (prefers-reduced-motion: reduce) { .rhe-lightbox { animation: none; } }
