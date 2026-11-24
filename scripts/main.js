@@ -473,7 +473,7 @@ function openLightbox(entry, page, era, onPage) {
   const scene = box.querySelector(".rhe-lb-scene");
   const img = box.querySelector(".rhe-lb-img");
   const label = box.querySelector(".rhe-lb-page");
-  let scale = 1, tx = 0, ty = 0, drag = null, busy = false;
+  let scale = 1, tx = 0, ty = 0, drag = null, moved = false, busy = false;
   const apply = () => { img.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`; };
   const reset = () => { scale = 1; tx = 0; ty = 0; apply(); };
   const show = () => {
@@ -508,10 +508,17 @@ function openLightbox(entry, page, era, onPage) {
     if (scale === 1) { tx = 0; ty = 0; }
     apply();
   }, { passive: false });
-  img.addEventListener("pointerdown", (event) => { if (event.button !== 0) return; drag = { x: event.clientX, y: event.clientY, tx, ty }; img.setPointerCapture(event.pointerId); });
-  img.addEventListener("pointermove", (event) => { if (!drag || scale <= 1) return; tx = drag.tx + event.clientX - drag.x; ty = drag.ty + event.clientY - drag.y; apply(); });
+  img.addEventListener("pointerdown", (event) => { if (event.button !== 0) return; drag = { x: event.clientX, y: event.clientY, tx, ty }; moved = false; img.setPointerCapture(event.pointerId); });
+  img.addEventListener("pointermove", (event) => { if (!drag) return; if (Math.abs(event.clientX - drag.x) + Math.abs(event.clientY - drag.y) > 4) moved = true; if (scale <= 1) return; tx = drag.tx + event.clientX - drag.x; ty = drag.ty + event.clientY - drag.y; apply(); });
   img.addEventListener("pointerup", () => { drag = null; });
-  img.addEventListener("dblclick", reset);
+  // Un clic (sans glisser) tourne la page s'il y a un verso ; un double-clic revient à la taille de l'écran.
+  let clickTimer = null;
+  img.addEventListener("click", (event) => {
+    event.stopPropagation();
+    if (moved || event.button !== 0) return;
+    if (clickTimer) { clearTimeout(clickTimer); clickTimer = null; reset(); return; }
+    clickTimer = setTimeout(() => { clickTimer = null; flip(); }, 250);
+  });
   document.addEventListener("keydown", onKey, true);
   show();
 }

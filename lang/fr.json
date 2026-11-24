@@ -23,7 +23,7 @@
     "Recto": "Recto",
     "Verso": "Verso",
     "Grand": "Voir en grand",
-    "AideGrand": "Molette : zoom · Glisser : déplacer · Double-clic : revenir · Échap : fermer",
+    "AideGrand": "Clic : retourner · Molette : zoom · Glisser : déplacer · Double-clic : revenir · Échap : fermer",
     "Fermer": "Fermer"
   }
 }
